@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.turkraft.springfilter.boot.Filter;
 
+import jakarta.validation.Valid;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.dto.ResultPaginationDTO;
 import vn.hoidanit.jobhunter.domain.dto.UserDTO;
@@ -41,7 +42,7 @@ public class UserController {
 
     @PostMapping("/users")
     @ApiMessage("Create a new user")
-    public ResponseEntity<UserDTO> createNewUser(@RequestBody User user) {
+    public ResponseEntity<UserDTO> createNewUser(@Valid @RequestBody User user) {
         String hashPassword = this.passwordEncoder.encode(user.getPassword());
         user.setPassword(hashPassword);
         UserDTO userDTO = this.userService.handleCreateUser(user);
@@ -49,19 +50,22 @@ public class UserController {
     }
 
     @DeleteMapping("/users/delete/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable(name = "id") Long id) throws IdInvalidException {
-        if (id >= 1500) {
-            throw new IdInvalidException("id must be less than 1500");
+    @ApiMessage("Delete a user")
+    public ResponseEntity<Void> deleteUser(@PathVariable(name = "id") Long id) throws IdInvalidException {
+        UserDTO uDTO = this.userService.getUserById(id);
+        if (uDTO == null) {
+            throw new IdInvalidException("Not found user with id: " + id);
         }
         this.userService.handleDeleteUser(id);
-        return ResponseEntity.status(HttpStatus.OK).body("culun");
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable(name = "id") Long id) {
-        User find = this.userService.getUserById(id);
+    @ApiMessage("fetch user by id")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable(name = "id") Long id) throws IdInvalidException {
+        UserDTO find = this.userService.getUserById(id);
         if (find == null) {
-            return ResponseEntity.notFound().build();
+            throw new IdInvalidException("Not found user with id: " + id);
         }
         return ResponseEntity.status(HttpStatus.OK).body(find);
     }

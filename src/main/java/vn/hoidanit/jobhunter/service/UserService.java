@@ -37,7 +37,7 @@ public class UserService {
         uDTO.setAge(u.getAge());
         uDTO.setAddress(u.getAddress());
         uDTO.setCreatedAt(u.getCreatedAt());
-        uDTO.setUpdatedAt(u.getUpdatedAt());
+        uDTO.setUpdatedAt(null);
         return uDTO;
     }
 
@@ -45,8 +45,21 @@ public class UserService {
         this.userRepository.deleteById(id);
     }
 
-    public User getUserById(Long id) {
-        return this.userRepository.findById(id).orElse(null);
+    public UserDTO getUserById(Long id) {
+        User user = this.userRepository.findById(id).orElse(null);
+        UserDTO uDTO = new UserDTO();
+        if (user == null)
+            return null;
+        else {
+            uDTO.setId(id);
+            uDTO.setName(user.getName());
+            uDTO.setAddress(user.getAddress());
+            uDTO.setGender(user.getGender().toString());
+            uDTO.setAge(user.getAge());
+            uDTO.setUpdatedAt(user.getUpdatedAt());
+            uDTO.setCreatedAt(user.getCreatedAt());
+        }
+        return uDTO;
     }
 
     public ResultPaginationDTO fetAllUsers(Specification<User> spec, Pageable pageable) {
@@ -88,7 +101,7 @@ public class UserService {
         uDTO.setGender(updatedUser.getGender().toString());
         uDTO.setAge(updatedUser.getAge());
         uDTO.setAddress(updatedUser.getAddress());
-        uDTO.setCreatedAt(updatedUser.getCreatedAt());
+        uDTO.setCreatedAt(null);
         uDTO.setUpdatedAt(updatedUser.getUpdatedAt());
 
         return uDTO;

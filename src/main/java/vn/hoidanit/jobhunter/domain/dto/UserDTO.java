@@ -2,10 +2,13 @@ package vn.hoidanit.jobhunter.domain.dto;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import vn.hoidanit.jobhunter.util.SecurityUtil;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
     private long id;
     private String name;
