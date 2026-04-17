@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import vn.hoidanit.jobhunter.util.SecurityUtil;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
@@ -18,6 +17,19 @@ public class UserDTO {
     private int age;
     private Instant createdAt;
     private Instant updatedAt;
+    private CompanyDTO company;
+
+    public UserDTO() {
+    }
+
+    public UserDTO(long id, String name, String gender, String address, int age, CompanyDTO company) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.address = address;
+        this.age = age;
+        this.company = company;
+    }
 
     public String getName() {
         return name;
@@ -83,6 +95,14 @@ public class UserDTO {
         this.updatedAt = updatedAt;
     }
 
+    public CompanyDTO getCompany() {
+        return company;
+    }
+
+    public void setCompany(CompanyDTO company) {
+        this.company = company;
+    }
+
     @PrePersist
     public void handleBeforeCreate() {
         this.createdAt = Instant.now();
@@ -93,4 +113,26 @@ public class UserDTO {
 
         this.updatedAt = Instant.now();
     }
+
+    public static class CompanyDTO {
+
+        public CompanyDTO() {
+        }
+
+        private long id;
+
+        public long getId() {
+            return id;
+        }
+
+        public CompanyDTO(long id) {
+            this.id = id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+    }
+
 }

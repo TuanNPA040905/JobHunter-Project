@@ -69,7 +69,7 @@ public class CompanyController {
             throw new IdInvalidException("id must be less than 1500");
         }
 
-        this.companyService.handleDeleteCompany(id);
+        this.companyService.deleteById(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
     }
 }

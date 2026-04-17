@@ -2,31 +2,44 @@ package vn.hoidanit.jobhunter.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import vn.hoidanit.jobhunter.domain.Company;
 import vn.hoidanit.jobhunter.domain.User;
 import vn.hoidanit.jobhunter.domain.response.ResultPaginationDTO;
 import vn.hoidanit.jobhunter.domain.response.UserDTO;
 import vn.hoidanit.jobhunter.domain.response.ResultPaginationDTO.Meta;
+import vn.hoidanit.jobhunter.repository.CompanyRepository;
 import vn.hoidanit.jobhunter.repository.UserRepository;
 import vn.hoidanit.jobhunter.util.constant.GenderEnum;
 import vn.hoidanit.jobhunter.util.error.EmailAlreadyExistsException;
 
 @Service
 public class UserService {
+    private final CompanyService companyService;
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, CompanyRepository companyRepository,
+            CompanyService companyService) {
         this.userRepository = userRepository;
+        this.companyRepository = companyRepository;
+        this.companyService = companyService;
     }
 
     public UserDTO handleCreateUser(User user) {
         if (this.userRepository.existsByEmail(user.getEmail())) {
             throw new EmailAlreadyExistsException("Email already exists: " + user.getEmail());
+        }
+        if (user.getCompany() != null) {
+            Optional<Company> companyOptional = this.companyRepository.findById(user.getCompany().getId());
+            user.setCompany(companyOptional.isPresent() ? companyOptional.get() : null);
         }
         User u = this.userRepository.save(user);
         UserDTO uDTO = new UserDTO();
@@ -38,6 +51,8 @@ public class UserService {
         uDTO.setAddress(u.getAddress());
         uDTO.setCreatedAt(u.getCreatedAt());
         uDTO.setUpdatedAt(null);
+        UserDTO.CompanyDTO cDTO = new UserDTO.CompanyDTO(user.getCompany().getId());
+        uDTO.setCompany(cDTO);
         return uDTO;
     }
 
@@ -58,6 +73,8 @@ public class UserService {
             uDTO.setAge(user.getAge());
             uDTO.setUpdatedAt(user.getUpdatedAt());
             uDTO.setCreatedAt(user.getCreatedAt());
+            UserDTO.CompanyDTO cDTO = new UserDTO.CompanyDTO(user.getCompany().getId());
+            uDTO.setCompany(cDTO);
         }
         return uDTO;
     }
@@ -74,8 +91,32 @@ public class UserService {
         mt.setTotal(pageUsers.getTotalElements());
 
         rs.setMeta(mt);
-        rs.setResult(pageUsers.getContent());
+        List<UserDTO> listUser = pageUsers.getContent().stream().map(item -> {
+            UserDTO userDTO = new UserDTO();
+            userDTO.setId(item.getId());
+            userDTO.setEmail(item.getEmail());
+            userDTO.setName(item.getName());
+            userDTO.setAge(item.getAge());
+            userDTO.setGender(item.getGender() != null ? item.getGender().toString() : null);
+            userDTO.setAddress(item.getAddress());
+
+            // Lấy thông tin company gán vào DTO
+            if (item.getCompany() != null) {
+                UserDTO.CompanyDTO com = new UserDTO.CompanyDTO();
+                com.setId(item.getCompany().getId());
+                userDTO.setCompany(com);
+            }
+            return userDTO;
+        }).collect(Collectors.toList());
+
+        rs.setResult(listUser); // Gán danh sách DTO sạch sẽ vào đây
+
         return rs;
+    }
+
+    @Transactional
+    public void deleteUserByCompany(Company c) {
+        this.userRepository.deleteByCompany(c);
     }
 
     public UserDTO handleUpdateUser(UserDTO userUpdate) {
@@ -103,7 +144,8 @@ public class UserService {
         uDTO.setAddress(updatedUser.getAddress());
         uDTO.setCreatedAt(null);
         uDTO.setUpdatedAt(updatedUser.getUpdatedAt());
-
+        UserDTO.CompanyDTO cDTO = new UserDTO.CompanyDTO(userUpdate.getCompany().getId());
+        uDTO.setCompany(cDTO);
         return uDTO;
     }
 

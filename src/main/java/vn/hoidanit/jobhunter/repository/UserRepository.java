@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.transaction.annotation.Transactional;
+
+import vn.hoidanit.jobhunter.domain.Company;
 
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     public User findByEmail(String email);
@@ -16,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     public boolean existsByEmail(String email);
 
     User findByRefreshTokenAndEmail(String token, String email);
+
+    void deleteByCompany(Company company);
 }
